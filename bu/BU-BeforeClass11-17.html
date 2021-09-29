@@ -1,0 +1,601 @@
+<!--
+Name: Joshua Davis
+UAID: 010946462
+Date: 11/12/2020
+Assignment 7	[mario.html]
+Description: An implementation of assignment 5 in Javascript
+-------------------------------------------------------------------------------------------------
+
+Tips:
+Classes should begin with a capital letter, while
+methods should begin with a lowercase letter
+
+You can use functions in place of classes,
+but you don't have to for this project.
+
+addEventListener and setInterval both use
+closures in their calls. These calls expect
+simple functions, so we wrapped our class methods
+in a wrapper function that they can use. These wrapper
+functions have access to the local variables because they
+retain a reference to the current stack frame, which
+keeps it alive even after the outer function returns.
+
+-->
+
+<head> 
+	<title>The Friendly Goomba</title>
+	<meta charset="UTF-8">
+</head>
+<body>
+<br> 
+<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #cccccc;"></canvas>
+
+<script type="text/javascript">
+const GROUND_LEVEL = 480;
+const GRAVITY = 9.8;
+const SCREEN_HEIGHT = 500;
+const SCREEN_WIDTH = 1000;
+const RIGHT = true;
+const LEFT = false;
+const MARIO_SPEED = 25;
+const JUMP_HEIGHT = -90;
+const JUMP_LIMIT = 8;
+const STARTING_X = SCREEN_WIDTH/2 - 60
+var Scroll_Position = 0;
+
+
+class Sprite 
+{
+	constructor(x, y, image_url)
+	{
+		this.x = x;
+		this.y = y;
+		this.image = new Image();
+		this.image.src = image_url;
+	}
+
+	<!-- move(direction) -->
+	<!-- { -->
+		<!-- if(direction === RIGHT) -->
+		<!-- { -->
+			<!-- this.rightFacing = true; -->
+			<!-- this.x += MARIO_SPEED; -->
+		<!-- } -->
+		<!-- else -->
+		<!-- { -->
+			<!-- this.rightFacing = false; -->
+			<!-- this.x -= MARIO_SPEED; -->
+		<!-- } -->
+	<!-- } -->
+	
+	spriteCollision(s)
+	{
+		var myRight;
+		var myLeft;
+		if(this instanceof Mario)	//checks for mario specifically since
+		{							//game relies the xPos and scroll variables
+			myRight = this.xPos + this.w; 
+			myLeft = this.xPos;
+		}
+		else						//otherwise, x values are the usual.
+		{
+			myRight = this.x + this.w; 
+			myLeft = this.x;
+		}
+		var myBottom = this.y + this.h;
+		var myTop = this.y;
+		var theirRight = s.x + s.w;
+		var theirLeft = s.x;
+		var theirBottom = s.y + s.h;
+		var theirTop = s.y;
+		
+		if(myRight < theirLeft)		//I am left of the entity
+		{
+			if(this instanceof Mario)
+				this.xCollision = false;
+			//Goomba.x_collision = false;
+			return false;
+		}
+		if(myLeft > theirRight) 	//I am right of the entity
+		{
+			if(this instanceof Mario)
+				this.xCollision = false;
+			//Goomba.x_collision = false;
+			return false;
+		}
+		if(myBottom <= theirTop) 	//I am above the entity
+			return false;
+		if(myTop > theirBottom) 	//I am below the entity
+			return false;
+			
+		return true;
+	}
+}
+
+class Mario extends Sprite
+{
+	constructor(x, y, image_url)
+	{
+		super(x, y, image_url);
+		this.v_velocity = 0.0;
+		this.w = 60;
+		this.h = 95;
+		this.xPos = SCREEN_WIDTH/2;
+		this.rightFacing = true; 
+		//this.image_array[];
+		this.images = new Array();
+		this.loadImageArray(this.images);
+		this.image_url = this.images;
+		this.jumpTimer = JUMP_LIMIT;
+		this.onObject = false;
+		this.yShadow = y;
+		this.yFetch = y;
+		this.collisionDiff = 0.0;
+		this.xCollision = false;
+		this.imageCycle = 0;
+		//this.onLand = true;
+	}
+	
+	update()
+	{
+		this.v_velocity += GRAVITY;
+		this.y += this.v_velocity;
+		
+		this.xPos = this.x + Scroll_Position;
+		
+		if(this.y >= GROUND_LEVEL - this.h)
+		{
+			this.v_velocity = 0.0;
+			this.y = GROUND_LEVEL - this.h;
+		}
+		
+		if(this.jumpTimer <= JUMP_LIMIT)
+			this.jumpTimer++;
+			
+		//console.log("jumpTimer: " + this.jumpTimer);
+		
+		//for(var i = 0; i < 5; i++)
+			//this.image_url = this.images[i];
+		
+		this.yFetch = this.y;
+	}
+	
+	move(direction)
+	{
+		if(direction === RIGHT)
+		{
+			this.rightFacing = true;
+			Scroll_Position += MARIO_SPEED;
+			
+			if(this.imageCycle < 4)
+				this.imageCycle ++;
+			else
+				this.imageCycle = 0;
+		}
+		
+		if(direction === LEFT)
+		{
+			this.rightFacing = false;
+			Scroll_Position -= MARIO_SPEED;
+			
+			if(this.imageCycle > 0)
+				this.imageCycle --;
+			else
+				this.imageCycle = 4;
+		}
+	}
+	
+	jump()
+	{
+		//if(onLand)
+			this.v_velocity = JUMP_HEIGHT;
+	}
+	stopJump()
+	{
+		if(this.v_velocity < 0)
+			this.v_velocity = 0;
+	}
+	
+	onLand()
+	{
+		if((this.y + this.h) >= (GROUND_LEVEL))
+		{
+			this.jumpTimer = 0;
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	setYShadow(yS)
+	{
+		this.yShadow = yS;
+	}
+	
+	loadImageArray(imgs)
+	{
+		imgs[0] = "images/marioR1.png";
+		imgs[1] = "images/marioR2.png";
+		imgs[2] = "images/marioR3.png";
+		imgs[3] = "images/marioR4.png";
+		imgs[4] = "images/marioR5.png";
+		console.log("Images loaded!");
+	}
+	
+	tubeCollision(stationary)
+	{
+		if((this.xPos <= stationary.x + stationary.w						//if mario is above or below the tube
+			|| (this.xPos + this.w) >= stationary.x))		
+		{															//if mario's feet were just at or above the 
+																	//top of the tube, or if the tube is short
+																	//enough to walk up like stairs:													
+			if((this.yShadow + this.h) <= stationary.y
+				|| this.y + this.h <= stationary.y)
+			{
+				this.onObject = true;	
+				this.v_velocity = 0;										//halt (downward) velocity
+				this.y = stationary.y - this.h;								//push mario up to top of tube
+				this.yShadow = this.y;
+			}
+																	//if mario's head was just at or below the
+																	//bottom of the tube:
+			if((this.yShadow) >= (stationary.y + stationary.h))
+			{
+				this.v_velocity = 0;										//halt (upward) velocity
+				this.y = stationary.y + stationary.h;					//push mario down to bottom of tube
+				//Model.fizzle();										//play sound
+			}
+		}
+		if((this.y + this.h) > stationary.y									//if mario is right or left of the tube
+			&& (this.y < stationary.y + stationary.h)) 			
+		{
+			if(this.rightFacing)											//if mario is facing right
+			{														//find how far mario entered the tube:
+				this.collisionDiff = Math.abs((this.xPos + this.w) - stationary.x);  
+				Scroll_Position -= this.collisionDiff + 1;			//snap mario back to left side of tube
+				this.xCollision = true;									//an x collision has happened					
+			}
+			
+			if(!this.rightFacing)										//if mario is facing left
+			{														//find how far mario entered the tube:
+				this.collisionDiff = Math.abs((this.xPos) - (stationary.x + this.w));
+				Scroll_Position += this.collisionDiff - 4;			//snap mario back to right side of tube
+				this.xCollision = true;									//an x collision has happened
+			}
+		}
+	}
+}
+
+class Tube extends Sprite
+{
+	constructor(x, y, image_url)
+	{
+		super(x, y, image_url);
+		this.w = 55;
+		this.h = 400;
+	}
+	update()
+	{	}
+}
+
+
+class Model
+{
+	constructor()
+	{
+		this.sprites = [];
+		this.sprites.push(new Tube (200, 300, "images/tubeBottom.png"));
+		this.sprites.push(new Tube (700, 300, "images/tubeBottom.png"));
+		//this.sprites.push(new Mario (50, 50, "images/marioR1.png"));
+		this.mario = new Mario(STARTING_X, 50, "images/marioR1.png");
+		this.sprites.push(this.mario);
+		this.collision = false;
+	}
+
+	update()
+	{
+		<!-- for(let i = 0; i < this.sprites.length; i++) -->
+		<!-- { -->
+			<!-- this.sprites[i].update(); -->
+		<!-- } -->
+		
+		//Collision Detection
+		if(!this.collision)															//if no collision is found
+			this.mario.onObject = false;												//mario can't be on an object
+		
+		//checkFireballs();
+		//checkGoombas();
+		
+		//Collision Handling//////////////////////////////////////////////////////////////////////////////////////////
+		//Collision detection is universal and in sprite class
+		for(let i = 0; i < this.sprites.length; i++)									//loop through sprite array
+		{
+			this.sprites[i].update();											//update each sprite in the array -->
+			
+			<!-- if((sprites.get(i).type.equals("goomba")))							//if current sprite is a goomba -->
+			<!-- { -->
+				<!-- Goomba g = (Goomba)sprites.get(i);								//set a new goomba to current goomba -->
+				<!-- if(g.framesOnFire < 40											//if this goomba has started burning -->
+					<!-- && g.framesOnFire > 20)										//and it's been past 20 frames. -->
+					<!-- g.isDead = true;											//set goomba to die soon -->
+				
+				<!-- for(int j = 0; j < sprites.size(); j++)							//loop through sprite array -->
+				<!-- { -->
+					<!-- if((sprites.get(j).type.equals("tube")))					//check against tubes -->
+					<!-- { -->
+						<!-- collision = g.spriteCollision(sprites.get(j));			//check if goomba has collided with a tube. -->
+						<!-- if(collision)											//has the goomba collided with a tube? -->
+						<!-- { -->
+							<!-- g.tubeCollision(sprites.get(j));					//get goomba to reverse direction -->
+							<!-- if(g.turnAround)									//if goomba is turning around -->
+								<!-- g.direction = !sprites.get(i).direction;		//reverse its direction -->
+						<!-- } -->
+					<!-- } -->
+				<!-- } -->
+			<!-- } -->
+			<!-- if((sprites.get(i).type.equals("fireball")))						//if current sprite is a fireball -->
+			<!-- { -->
+				<!-- Fireball f = (Fireball)sprites.get(i);							//set a new fireball to current fireball -->
+				
+				<!-- f.burnTime --;													//decrement burn time -->
+				<!-- if(f.burnTime <= 0)												//if burntime is less than or equal to 0 -->
+					<!-- f.extinguished = true;										//delete the fireball -->
+				
+				<!-- for(int j = 0; j < sprites.size(); j++)							//loop through sprite array -->
+				<!-- { -->
+					<!-- if((sprites.get(j).type.equals("tube")))					//check fireball against tubes -->
+					<!-- { -->
+						<!-- collision = f.spriteCollision(sprites.get(j));			//check if fireball collided with tube -->
+						
+						<!-- if(collision)											//if fireball has collided with tube -->
+						<!-- { -->
+							<!-- f.extinguished = true;								//set fireball to be deleted soon -->
+							<!-- fizzle();											//play fizzle sound -->
+						<!-- } -->
+					<!-- } -->
+					<!-- if((sprites.get(j).type.equals("goomba")))					//check fireball against goombas -->
+					<!-- { -->
+						<!-- collision = f.spriteCollision(sprites.get(j));			//check if fireball collided with a goomba -->
+						
+						<!-- if(collision)											//has fireball collided with a goomba? -->
+						<!-- { -->
+							<!-- Goomba g = (Goomba)sprites.get(j);					//set a new goomba to current goomba -->
+							<!-- g.burn();											//light goomba on fire -->
+							<!-- goombaIgnited();									//play goomba ignited sound -->
+							<!-- f.extinguished = true;								//set fireball to be deleted soon -->
+						<!-- } -->
+					<!-- } -->
+				<!-- } -->
+			<!-- } -->
+			
+			if(this.sprites[i] instanceof Tube)							//if current sprite is a tube -->
+			{
+				this.collision = this.mario.spriteCollision(this.sprites[i]);				//check if mario collides with tube
+				if(this.collision)													//has mario collided with a tube?
+					this.mario.tubeCollision(this.sprites[i]);						//get mario out of the tube
+			}
+		}
+		
+		
+		
+		
+	}
+
+	<!-- onclick(x, y) -->
+	<!-- { -->
+		<!-- for(let i = 0; i < this.sprites.length; i++) -->
+		<!-- { -->
+			<!-- this.sprites[i].onclick(x, y); -->
+		<!-- } -->
+	<!-- } -->
+
+	move(direction)
+	{
+		//console.log("Current direction: " + direction);
+		this.mario.move(direction);
+	}
+	
+	jump()
+	{
+		this.mario.jump();
+	}
+	
+	stopJump()
+	{
+		this.mario.stopJump();
+	}
+	
+	getXPos()
+	{
+		return this.mario.x;
+	}
+	
+	getYPos()
+	{
+		return this.mario.y;
+	}
+	
+	getYShadow()
+	{
+		return this.mario.yShadow;
+	}
+	
+	getJumpTimer()
+	{
+		return this.mario.jumpTimer;
+	}
+	
+	checkOnLand()
+	{
+		return this.mario.onLand();
+	}
+	
+	setYShadow(yS)
+	{
+		this.mario.setYShadow(yS);
+	}
+	
+	getXCollision()
+	{
+		return this.mario.xCollision;
+	}
+	
+}
+
+
+
+
+class View
+{
+	constructor(model)
+	{
+		this.model = model;
+		<!-- getElementById() returns an object that represents an element in the HTML DOM. -->
+		<!-- This goes after the <canvas> tag so that it will succeed in finding "myCanvas" -->
+		this.canvas = document.getElementById("myCanvas"); 
+		//this.mario = new Image();
+		//this.mario.src = "images/marioR1.png"; <!-- Causes browser to request the mario.png image. May take time. -->
+		this.ground = new Image();
+		this.ground.src = "images/ground.png";
+	}
+
+	update()
+	{
+		let ctx = this.canvas.getContext("2d");
+		ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		
+		<!-- Background Elements -->
+		var grd = ctx.createLinearGradient(0, 0, 0, 200);
+		grd.addColorStop(0, "#039BE5");
+		grd.addColorStop(1, "#7AD7F0");
+		ctx.fillStyle = grd;
+		ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		ctx.drawImage(this.ground, -100, GROUND_LEVEL);
+		
+		<!-- Render Sprites -->
+		for(let i = 0; i < this.model.sprites.length; i++)
+		{
+			let sprite = this.model.sprites[i];
+			if(this.model.sprites[i] instanceof Mario)
+			{
+				ctx.drawImage(sprite.image, sprite.x, sprite.y);
+			}
+			else
+			{
+				ctx.drawImage(sprite.image, sprite.x - Scroll_Position, sprite.y);
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+class Controller
+{
+	constructor(model, view)
+	{
+		this.model = model; <!-- must use "this", as it refers to the variable associated with this class-->
+		this.view = view;
+		this.key_right = false;
+		this.key_left = false;
+		this.key_up = false;
+		this.key_down = false;
+		this.key_space = false;
+		let self = this; <!-- sets self to this, because when we add event listeners, we have a function that-->
+						 <!-- needs to be passed "this", and it can sometimes mess it up if "this" is used.	 -->
+		view.canvas.addEventListener("click", function(event) { self.onClick(event); });
+		document.addEventListener('keydown', function(event) { self.keyDown(event); }, false);
+		document.addEventListener('keyup', function(event) { self.keyUp(event); }, false);
+	}
+
+	onClick(event)
+	{
+		<!-- this.model.onclick(event.pageX - this.view.canvas.offsetLeft, event.pageY - this.view.canvas.offsetTop); -->
+	}
+
+	keyDown(event)
+	{
+		if(event.keyCode == 39) this.key_right = true;
+		else if(event.keyCode == 37) this.key_left = true;
+		else if(event.keyCode == 38) this.key_up = true;
+		else if(event.keyCode == 40) this.key_down = true;
+		<!-- WASD support --!>
+		else if(event.keyCode == 68) this.key_right = true;
+		else if(event.keyCode == 65) this.key_left = true;
+		else if(event.keyCode == 87) this.key_up = true;
+		else if(event.keyCode == 83) this.key_down = true;
+		else if(event.keyCode == 32) this.key_space = true;
+
+	}
+
+	keyUp(event)
+	{
+		if(event.keyCode == 39) this.key_right = false;
+		else if(event.keyCode == 37) this.key_left = false;
+		else if(event.keyCode == 38) this.key_up = false;
+		else if(event.keyCode == 40) this.key_down = false;
+		<!-- WASD support --!>
+		else if(event.keyCode == 68) this.key_right = false;
+		else if(event.keyCode == 65) this.key_left = false;
+		else if(event.keyCode == 87) this.key_up = false;
+		else if(event.keyCode == 83) this.key_down = false;
+		else if(event.keyCode == 32) 
+		{
+			this.key_space = false;
+			this.model.stopJump();
+		}
+	}
+
+	update()
+	{
+		if(!(this.model.getYShadow() == this.model.getYPos()))
+		{
+			console.log("yShadow: " + this.model.getYShadow());
+			console.log("y: " + this.model.getYPos());
+		}
+		this.model.setYShadow(this.model.getYPos());
+		if(this.key_right)
+			if(!this.model.getXCollision())
+				this.model.move(RIGHT);
+		if(this.key_left)
+			if(!this.model.getXCollision())
+				this.model.move(LEFT);
+		if(this.key_space)
+			if((this.model.getJumpTimer() >= JUMP_LIMIT) && (this.model.checkOnLand()))
+				this.model.jump();
+	}
+}
+
+
+
+
+
+class Game
+{
+	constructor() <!-- Initializes everything -->
+	{
+		this.model = new Model();
+		this.view = new View(this.model);
+		this.controller = new Controller(this.model, this.view);
+	}
+
+	onTimer()
+	{
+		this.controller.update();
+		this.model.update();
+		this.view.update();
+	}
+}
+
+<!-- Below is essentially the "main()" function-->
+let game = new Game(); 
+let timer = setInterval(function() { game.onTimer(); }, 40);
+
+</script>
+
+</body>

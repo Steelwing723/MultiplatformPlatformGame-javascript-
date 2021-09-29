@@ -1,0 +1,377 @@
+<!--
+Name: Joshua Davis
+UAID: 010946462
+Date: 11/12/2020
+Assignment 7	[mario.html]
+Description: An implementation of assignment 5 in Javascript
+-------------------------------------------------------------------------------------------------
+
+Tips:
+Classes should begin with a capital letter, while
+methods should begin with a lowercase letter
+
+You can use functions in place of classes,
+but you don't have to for this project.
+
+addEventListener and setInterval both use
+closures in their calls. These calls expect
+simple functions, so we wrapped our class methods
+in a wrapper function that they can use. These wrapper
+functions have access to the local variables because they
+retain a reference to the current stack frame, which
+keeps it alive even after the outer function returns.
+
+-->
+
+<head> 
+	<title>The Friendly Goomba</title>
+	<meta charset="UTF-8">
+</head>
+<body>
+<br> 
+<canvas id="myCanvas" width="1000" height="500" style="border:1px solid #cccccc;"></canvas>
+
+<script type="text/javascript">
+const GROUND_LEVEL = 480;
+const GRAVITY = 9.8;
+const SCREEN_HEIGHT = 500;
+const SCREEN_WIDTH = 1000;
+const RIGHT = true;
+const LEFT = false;
+const MARIO_SPEED = 20;
+const JUMP_HEIGHT = -70;
+var Scroll_Position = 0;
+
+
+class Sprite 
+{
+	constructor(x, y, image_url)
+	{
+		this.x = x;
+		this.y = y;
+		this.image = new Image();
+		this.image.src = image_url;
+	}
+
+	<!-- move(direction) -->
+	<!-- { -->
+		<!-- if(direction === RIGHT) -->
+		<!-- { -->
+			<!-- this.rightFacing = true; -->
+			<!-- this.x += MARIO_SPEED; -->
+		<!-- } -->
+		<!-- else -->
+		<!-- { -->
+			<!-- this.rightFacing = false; -->
+			<!-- this.x -= MARIO_SPEED; -->
+		<!-- } -->
+	<!-- } -->
+}
+
+class Mario extends Sprite
+{
+	constructor(x, y, image_url)
+	{
+		super(x, y, image_url);
+		this.v_velocity = 0.0;
+		this.w = 60;
+		this.h = 95;
+		this.xPos = SCREEN_WIDTH/2;
+		this.rightFacing = true;
+		//this.image_array[];
+		this.images = new Array();
+		this.loadImageArray(this.images);
+		this.image_url = this.images;
+		this.jumpTimer = 0;
+		this.jumpLimit = 8;
+		this.onLand = true;
+	}
+	
+	update()
+	{
+		this.v_velocity += GRAVITY;
+		this.y += this.v_velocity;
+		
+		this.xPos = this.x + Scroll_Position;
+		
+		if(this.y >= GROUND_LEVEL - this.h)
+		{
+			this.v_velocity = 0.0;
+			this.y = GROUND_LEVEL - this.h;
+		}
+		
+		if(this.jumpTimer <= this.jumpLimit)
+			this.jumpTimer++;
+		
+		//for(var i = 0; i < 5; i++)
+			//this.image_url = this.images[i];
+	}
+	
+	move(direction)
+	{
+		if(direction === RIGHT)
+		{
+			this.rightFacing = true;
+			Scroll_Position += MARIO_SPEED;
+			for(var i = 0; i > 5; i++)
+			{
+				this.image_url = images[i];
+				console.log("Cycling images");
+			}
+		}
+		else
+		{
+			this.rightFacing = false;
+			Scroll_Position -= MARIO_SPEED;
+		}
+	}
+	
+	jump()
+	{
+		//if(onLand)
+			this.v_velocity = JUMP_HEIGHT;
+	}
+	
+	onLand()
+	{
+		if((this.y + this.h) >= (GROUND_LEVEL))
+		{
+			this.jumpTimer = 0;
+			this.onLand = true;
+		}
+		else
+			this.onLand = false;
+	}
+	
+	loadImageArray(imgs)
+	{
+		imgs[0] = "images/marioR1.png";
+		imgs[1] = "images/marioR2.png";
+		imgs[2] = "images/marioR3.png";
+		imgs[3] = "images/marioR4.png";
+		imgs[4] = "images/marioR5.png";
+		console.log("Images loaded!");
+	}
+	
+	imageGrab()
+	{
+		for(var i = 0; i > 5; i++)
+			{
+				return images[i];
+				//console.log("Cycling images");
+			}
+	}
+		<!-- this.image_array_L[0] = "images/marioR1.png"; -->
+		<!-- this.image_array_L[1] = "images/marioR2.png"; -->
+		<!-- this.image_array_L[2] = "images/marioR3.png"; -->
+		<!-- this.image_array_L[3] = "images/marioR4.png"; -->
+		<!-- this.image_array_L[4] = "images/marioR5.png"; -->
+}
+
+class Lettuce extends Sprite
+{
+	constructor(x, y, image_url)
+	{
+		super(x, y, image_url);
+	}
+	update()
+	{	}
+	
+	<!-- onclick(x, y) -->
+	<!-- {	} -->
+}
+
+
+class Model
+{
+	constructor()
+	{
+		this.sprites = [];
+		this.sprites.push(new Lettuce (200, 100, "lettuce.png"));
+		//this.sprites.push(new Mario (50, 50, "images/marioR1.png"));
+		this.mario = new Mario(50, 50, "images/marioR1.png");
+		this.sprites.push(this.mario);
+	}
+
+	update()
+	{
+		for(let i = 0; i < this.sprites.length; i++)
+		{
+			this.sprites[i].update();
+		}
+	}
+
+	<!-- onclick(x, y) -->
+	<!-- { -->
+		<!-- for(let i = 0; i < this.sprites.length; i++) -->
+		<!-- { -->
+			<!-- this.sprites[i].onclick(x, y); -->
+		<!-- } -->
+	<!-- } -->
+
+	move(direction)
+	{
+		//console.log("Current direction: " + direction);
+		this.mario.move(direction);
+	}
+	
+	jump()
+	{
+		this.mario.jump();
+	}
+	
+	getXPos()
+	{
+		return this.mario.xPos;
+	}
+}
+
+
+
+
+class View
+{
+	constructor(model)
+	{
+		this.model = model;
+		<!-- getElementById() returns an object that represents an element in the HTML DOM. -->
+		<!-- This goes after the <canvas> tag so that it will succeed in finding "myCanvas" -->
+		this.canvas = document.getElementById("myCanvas"); 
+		//this.mario = new Image();
+		//this.mario.src = "images/marioR1.png"; <!-- Causes browser to request the mario.png image. May take time. -->
+		this.ground = new Image();
+		this.ground.src = "images/ground.png";
+		
+	}
+
+	update()
+	{
+		let ctx = this.canvas.getContext("2d");
+		ctx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		
+		<!-- Background Elements -->
+		var grd = ctx.createLinearGradient(0, 0, 0, 200);
+		grd.addColorStop(0, "#039BE5");
+		grd.addColorStop(1, "#7AD7F0");
+		ctx.fillStyle = grd;
+		ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+		ctx.drawImage(this.ground, -100, GROUND_LEVEL);
+		
+		
+		//this.model.mario.image_url = "images/marioR2.png";
+		
+		ctx.save();
+		
+		ctx.translate(Scroll_Position, 0);
+		
+		ctx.restore();
+		
+		<!-- Render Sprites -->
+		for(let i = 0; i < this.model.sprites.length; i++)
+		{
+			let sprite = this.model.sprites[i];
+			ctx.drawImage(sprite.image, sprite.x, sprite.y);
+		}
+		
+		
+	}
+	
+	
+}
+
+
+
+
+
+
+
+class Controller
+{
+	constructor(model, view)
+	{
+		this.model = model; <!-- must use "this", as it refers to the variable associated with this class-->
+		this.view = view;
+		this.key_right = false;
+		this.key_left = false;
+		this.key_up = false;
+		this.key_down = false;
+		this.key_space = false;
+		let self = this; <!-- sets self to this, because when we add event listeners, we have a function that-->
+						 <!-- needs to be passed "this", and it can sometimes mess it up if "this" is used.	 -->
+		view.canvas.addEventListener("click", function(event) { self.onClick(event); });
+		document.addEventListener('keydown', function(event) { self.keyDown(event); }, false);
+		document.addEventListener('keyup', function(event) { self.keyUp(event); }, false);
+	}
+
+	onClick(event)
+	{
+		<!-- this.model.onclick(event.pageX - this.view.canvas.offsetLeft, event.pageY - this.view.canvas.offsetTop); -->
+	}
+
+	keyDown(event)
+	{
+		if(event.keyCode == 39) this.key_right = true;
+		else if(event.keyCode == 37) this.key_left = true;
+		else if(event.keyCode == 38) this.key_up = true;
+		else if(event.keyCode == 40) this.key_down = true;
+		<!-- WASD support --!>
+		else if(event.keyCode == 68) this.key_right = true;
+		else if(event.keyCode == 65) this.key_left = true;
+		else if(event.keyCode == 87) this.key_up = true;
+		else if(event.keyCode == 83) this.key_down = true;
+		else if(event.keyCode == 32) this.key_space = true;
+	}
+
+	keyUp(event)
+	{
+		if(event.keyCode == 39) this.key_right = false;
+		else if(event.keyCode == 37) this.key_left = false;
+		else if(event.keyCode == 38) this.key_up = false;
+		else if(event.keyCode == 40) this.key_down = false;
+		<!-- WASD support --!>
+		else if(event.keyCode == 68) this.key_right = false;
+		else if(event.keyCode == 65) this.key_left = false;
+		else if(event.keyCode == 87) this.key_up = false;
+		else if(event.keyCode == 83) this.key_down = false;
+		else if(event.keyCode == 32) this.key_space = false;
+	}
+
+	update()
+	{
+		if(this.key_right)
+			this.model.move(RIGHT);
+		if(this.key_left)
+			this.model.move(LEFT);
+		if(this.key_space)
+			this.model.jump();
+	}
+}
+
+
+
+
+
+class Game
+{
+	constructor() <!-- Initializes everything -->
+	{
+		this.model = new Model();
+		this.view = new View(this.model);
+		this.controller = new Controller(this.model, this.view);
+	}
+
+	onTimer()
+	{
+		this.controller.update();
+		this.model.update();
+		this.view.update();
+	}
+}
+
+<!-- Below is essentially the "main()" function-->
+let game = new Game(); 
+let timer = setInterval(function() { game.onTimer(); }, 40);
+
+</script>
+
+</body>
